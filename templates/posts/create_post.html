@@ -101,7 +101,7 @@
                 {% endif %}
             </div>
 
-            {# Categories Field (Now rendered by {{ field }} directly) #}
+            {# Categories Field #}
             <div class="mb-4">
                 <label for="{{ form.categories.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
                     {{ form.categories.name }}
@@ -128,12 +128,12 @@
 
     <script>
         $(document).ready(function() {
-            // Initialize Select2 on your categories dropdown
+            
             $('#category-select').select2({
-                placeholder: 'Select existing categories', // <--- CHANGED: No "type new ones"
+                placeholder: 'Select existing categories', 
                 allowClear: true,
-                tags: false, // <--- CRUCIAL: DISABLE TAGGING
-                tokenSeparators: [] // <--- CRUCIAL: Remove token separators
+                tags: false, 
+                tokenSeparators: [] 
             });
         });
     </script>
