@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .errorlist { color:rgb(93, 19, 19); list-style-type: none; padding: 0; margin-bottom: 10px; }
+        .errorlist li { font-size: 0.875rem; }
+        input[type="text"], input[type="email"], input[type="password"], textarea, input[type="file"] {
+            @apply w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Register for My Blog</h1>
+
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <ul class="errorlist">
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ field.label }}
+                        {% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}<p class="text-sm text-gray-500 mt-1">{{ field.help_text }}</p>{% endif %}
+                    {% if field.errors %}
+                        <ul class="errorlist">
+                            {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="w-full bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition duration-300 shadow-md font-semibold text-lg">
+                Register
+            </button>
+        </form>
+        <p class="mt-6 text-center text-gray-600">Already have an account? <a href="{% url 'login' %}" class="text-blue-600 hover:text-blue-800 font-medium">Login here</a>.</p>
+    </div>
+</body>
+</html>

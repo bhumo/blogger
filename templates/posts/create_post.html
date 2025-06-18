@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Post</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .errorlist { color: #ef4444; list-style-type: none; padding: 0; margin-top: 5px; margin-bottom: 10px; }
+        .errorlist li { font-size: 0.875rem; }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 0.75rem; /* p-3 */
+            border: 1px solid rgb(209 213 219); /* border border-gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            outline: none; /* focus:outline-none */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+        }
+        input[type="text"]:focus, textarea:focus, select:focus {
+            --tw-ring-color: rgb(59 130 246); /* focus:ring-blue-500 */
+            --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+            box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+            border-color: rgb(59 130 246); /* focus:border-blue-500 */
+        }
+
+        /* Override Select2 default styling to blend with Tailwind */
+        .select2-container .select2-selection--multiple {
+            display: block;
+            width: 100%;
+            padding: 0.5rem 0.75rem !important; /* px-3 py-2 */
+            border: 1px solid rgb(209 213 219) !important; /* border border-gray-300 */
+            border-radius: 0.375rem !important; /* rounded-md */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; /* shadow-sm */
+            outline: none !important; /* focus:outline-none */
+            min-height: 44px;
+            line-height: 1.5;
+        }
+        .select2-container .select2-selection--multiple:focus {
+            --tw-ring-color: rgb(59 130 246) !important; /* focus:ring-blue-500 */
+            --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color) !important;
+            box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000) !important;
+        }
+        .select2-results__option {
+            @apply p-2 !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Create New Blog Post</h1>
+
+        {% if messages %}
+            <ul class="mb-4">
+                {% for message in messages %}
+                    <li {% if message.tags %} class="{{ message.tags }} p-3 rounded-md text-sm {% if 'success' in message.tags %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}"{% endif %}>
+                        {{ message }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <ul class="errorlist">
+                    {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+
+            {# Title field #}
+            <div class="mb-4">
+                <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form.title.label }}
+ {% if form.title.field.required %}<span class="text-red-500">*</span>{% endif %}
+                </label>
+                {{ form.title }}
+                {% if form.title.help_text %}<p class="text-sm text-gray-500 mt-2 ">{{ form.title.help_text }}</p>{% endif %}
+                {% if form.title.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.title.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            {# Content field #}
+            <div class="mb-4">
+                <label for="{{ form.content.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form.content.label }}
+ {% if form.content.field.required %}<span class="text-red-500">*</span>{% endif %}
+                </label>
+                {{ form.content }}
+                {% if form.content.help_text %}<p class="text-sm text-gray-500 mt-2">{{ form.content.help_text }}</p>{% endif %}
+                {% if form.content.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.content.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            {# Categories Field (Now rendered by {{ field }} directly) #}
+            <div class="mb-4">
+                <label for="{{ form.categories.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form.categories.name }}
+                    {% if form.categories.field.required %}<span class="text-red-500">*</span>{% endif %}
+                </label>
+                {{ form.categories }} {# Now renders the <select multiple> #}
+                {% if form.categories.help_text %}<p class="text-sm text-gray-500 mt-2">{{ form.categories.help_text }}</p>{% endif %}
+                {% if form.categories.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.categories.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="w-full bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition duration-300 shadow-md font-semibold text-lg">
+                Publish Post
+            </button>
+        </form>
+        <p class="mt-6 text-center text-gray-600"><a href="{% url 'home' %}" class="text-blue-600 hover:text-blue-800 font-medium">Back to Home</a>.</p>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 on your categories dropdown
+            $('#category-select').select2({
+                placeholder: 'Select existing categories', // <--- CHANGED: No "type new ones"
+                allowClear: true,
+                tags: false, // <--- CRUCIAL: DISABLE TAGGING
+                tokenSeparators: [] // <--- CRUCIAL: Remove token separators
+            });
+        });
+    </script>
+</body>
+</html>
