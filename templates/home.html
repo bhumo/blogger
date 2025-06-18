@@ -7,9 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
-        /* For the active pagination button */
+        
+        /* For the active pagination button - Expanded from @apply */
         .pagination-active {
-            @apply bg-blue-600 text-white;
+            background-color: #2563eb; /* bg-blue-600 */
+            color: #ffffff; /* text-white */
         }
         /* Style for the messages container */
         .message-container {
@@ -30,6 +32,54 @@
         .message-container.fade-out {
             opacity: 0;
             pointer-events: none; /* Make it unclickable when faded */
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            max-width: 800px;
+            width: 95%;
+            max-height: 90%;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease-in-out;
+        }
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+        .modal-close-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: #4b5563; /* gray-600 */
+        }
+        .modal-close-button:hover {
+            color: #1f2937; /* gray-800 */
         }
     </style>
 </head>
@@ -94,18 +144,20 @@
                                 {% endfor %}
                             {% endif %}
                         </p>
-                        <p class="text-gray-700 mb-4">{{ post.content|truncatechars:200 }}</p>
+                       
+                        <p class="text-gray-700 mb-4">{{ post.content|truncatechars:200 }}</p> {# Display truncated by default always #}
                         
                         <div class="flex justify-between items-center mt-4">
-                            <a href="#" class="text-blue-600 hover:text-blue-800 font-medium">Read More &rarr;</a>
-                            
+                            <button onclick="openPostModal('{{ post.pk }}', '{% url "post_detail_api" post.pk %}')"
+                                    class="text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
+                                Read More &rarr;
+                            </button>
                             {# Edit/Delete Buttons for Post Author #}
                             {% if user.is_authenticated and user == post.author %}
                                 <div class="space-x-2">
                                     <a href="{% url 'post_edit' post.pk %}" class="inline-block bg-yellow-500 text-white px-3 py-1 text-sm rounded-md hover:bg-yellow-600 transition duration-300">Edit</a>
-                                    {# CHANGED: Added onclick confirmation for delete #}
-                                    <a href="{% url 'post_delete' post.pk %}" 
-                                       onclick="return confirm('Are you sure you want to delete the post titled \'{{ post.title|escapejs }}\'?')" 
+                                    <a href="{% url 'post_delete' post.pk %}"
+                                       onclick="return confirm('Are you sure you want to delete the post titled \'{{ post.title|escapejs }}\'?')"
                                        class="inline-block bg-red-500 text-white px-3 py-1 text-sm rounded-md hover:bg-red-600 transition duration-300">Delete</a>
                                 </div>
                             {% endif %}
@@ -139,7 +191,7 @@
         {% endif %}
     </div>
 
-    {# MESSAGES CONTAINER (moved outside the main content div for fixed positioning) #}
+    {# MESSAGES CONTAINER #}
     {% if messages %}
         <div id="messages-container" class="message-container">
             {% for message in messages %}
@@ -150,20 +202,202 @@
             {% endfor %}
         </div>
         <script>
-            // JavaScript to hide messages after 5 seconds
             document.addEventListener('DOMContentLoaded', function() {
                 var messagesContainer = document.getElementById('messages-container');
                 if (messagesContainer) {
                     setTimeout(function() {
                         messagesContainer.classList.add('fade-out');
-                        // Optional: remove element from DOM after fade out
                         setTimeout(function() {
                             messagesContainer.remove();
-                        }, 500); // After fade-out transition completes
-                    }, 5000); // 5000 milliseconds = 5 seconds
+                        }, 500);
+                    }, 5000);
                 }
             });
         </script>
     {% endif %}
+
+    {# Post Detail Modal Structure #}
+    <div id="post-modal-overlay" class="modal-overlay" onclick="closePostModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="modal-close-button" onclick="closePostModal()">&#x2715;</span>
+            <div id="modal-post-details" class="mb-8">
+                {# Post details will be loaded here with JavaScript #}
+            </div>
+
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Comments</h3>
+            <div id="modal-comments-list" class="space-y-4 mb-8">
+                {# Comments will be loaded here with JavaScript #}
+            </div>
+
+            {# Comment Form (only visible if user is authenticated) #}
+            {% if user.is_authenticated %}
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3">Add a Comment</h4>
+                    <form id="comment-form" method="post" data-post-id="" class="space-y-3">
+                        {% csrf_token %}                        
+                        <textarea name="content" rows="4" placeholder="Type your comment here..."
+                                  class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        <button type="submit" 
+                                class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">
+                            Submit Comment
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <p class="text-gray-600 text-center mt-4">Please <a href="{% url 'login' %}" class="text-blue-600 hover:text-blue-800 font-medium">log in</a> to add a comment.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {# NEW: JavaScript for Modal and AJAX #}
+    <script>
+        // Function to get CSRF token from cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        function openPostModal(postId, apiUrl) {
+            const modalOverlay = document.getElementById('post-modal-overlay');
+            const modalPostDetails = document.getElementById('modal-post-details');
+            const modalCommentsList = document.getElementById('modal-comments-list');
+            const commentForm = document.getElementById('comment-form');
+
+            // Clear previous content
+            modalPostDetails.innerHTML = '<p class="text-gray-500 text-center">Loading post...</p>';
+            modalCommentsList.innerHTML = '<p class="text-gray-500 text-center">Loading comments...</p>';
+            if (commentForm) {
+                commentForm.reset();
+                commentForm.setAttribute('data-post-id', postId); // Set post ID for form submission
+            }
+            
+            modalOverlay.classList.add('show');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling background
+
+            // Fetch post details via AJAX
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Render Post Details
+                    let postHtml = `
+                        <h2 class="text-3xl font-bold text-gray-800 mb-4">${data.title}</h2>
+                        <p class="text-sm text-gray-600 mb-3">
+By <span class\="font\-medium"\></span>${data.author}</span> on ${new Date(data.published_date).toLocaleDateString()}
+                            ${data.categories.length > 0 ? `in ${data.categories.map(cat => `<span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full mr-1">${cat}</span>`).join('')}` : ''}
+                        </p>
+                        <p class="text-gray-700 leading-relaxed mb-6">${data.content}</p>
+                    `;
+                    modalPostDetails.innerHTML = postHtml;
+
+                    // Render Comments
+                    modalCommentsList.innerHTML = ''; // Clear loading message
+                    if (data.comments && data.comments.length > 0) {
+                        data.comments.forEach(comment => {
+                            const commentHtml = `
+                                <div class="bg-gray-100 p-3 rounded-lg border border-gray-200">
+                                    <p class="text-sm font-semibold text-gray-800 mb-1">${comment.author} <span class="text-gray-500 font-normal">on ${new Date(comment.created_at).toLocaleDateString()}</span></p>
+                                    <p class="text-gray-700">${comment.content}</p>
+                                </div>
+                            `;
+                            modalCommentsList.innerHTML += commentHtml;
+                        });
+                    } else {
+                        modalCommentsList.innerHTML = '<p class="text-gray-600">No comments yet. Be the first to comment!</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching post details:', error);
+                    modalPostDetails.innerHTML = '<p class="text-red-600">Failed to load post details.</p>';
+                    modalCommentsList.innerHTML = '';
+                });
+        }
+
+        function closePostModal(event) {
+            // Only close if clicking on the overlay or the close button, not the content itself
+            if (event && event.target !== document.getElementById('post-modal-overlay') && event.target !== document.querySelector('.modal-close-button')) {
+                return;
+            }
+            const modalOverlay = document.getElementById('post-modal-overlay');
+            modalOverlay.classList.remove('show');
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+
+        // Handle comment form submission via AJAX
+        document.addEventListener('DOMContentLoaded', function() {
+            const commentForm = document.getElementById('comment-form');
+            if (commentForm) {
+                commentForm.addEventListener('submit', function(event) {
+                    event.preventDefault(); // Prevent default form submission
+
+                    const postId = commentForm.getAttribute('data-post-id');
+                    const commentContent = commentForm.elements.content.value;
+
+                    if (!commentContent.trim()) {
+                        alert('Comment cannot be empty.');
+                        return;
+                    }
+
+                    fetch(`{% url 'comment_create_api' 0 %}`.replace('0', postId), { // Replace '0' with actual post ID
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken
+                        },
+                        body: JSON.stringify({ content: commentContent })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            if (response.status === 403) {
+                                return response.json().then(err => { throw new Error(err.message || 'You must be logged in to comment.'); });
+                            }
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            const modalCommentsList = document.getElementById('modal-comments-list');
+                            const newCommentHtml = `
+                                <div class="bg-gray-100 p-3 rounded-lg border border-gray-200">                                    
+                                    <p class="text-sm font-semibold text-gray-800 mb-1">${data.comment.author} <span class="text-gray-500 font-normal">on ${new Date(data.comment.created_at).toLocaleDateString()}</span></p>
+<p class\="text\-gray\-700"\></span>${data.comment.content}</p>
+                                </div>
+                            `;
+                            // Prepend new comment to the list
+                            modalCommentsList.insertAdjacentHTML('afterbegin', newCommentHtml);
+                            // Clear form and display message
+                            commentForm.reset();
+                            alert('Comment added successfully!'); // Basic alert, consider using Django messages for this
+                        } else {
+                            alert('Error adding comment: ' + (data.message || 'Unknown error.'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error submitting comment:', error);
+                        alert('Failed to submit comment: ' + error.message);
+                    });
+                });
+            }
+        });
+
+    </script>
 </body>
 </html>
