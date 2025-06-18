@@ -91,7 +91,12 @@
                 {% if user.is_authenticated %}
                     <span class="text-lg text-gray-700 mr-4">Hello, <span class="font-semibold text-blue-600">{{ user.username }}</span>!</span>
                     <a href="{% url 'create_post' %}" class="inline-block bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition duration-300 mr-2">New Post</a>   
-                    <a href="{% url 'logout' %}" class="inline-block bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-300">Logout</a>
+                    <form action="{% url 'logout' %}" method="post" class="inline-block m-0 p-0">
+                        {% csrf_token %} {# CRUCIAL for POST forms in Django #}
+                        <button type="submit" class="inline-block bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-300">
+                            Logout
+                        </button>
+                    </form>
                 {% else %}
                     <a href="{% url 'login' %}" class="inline-block bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition duration-300">Login</a>
                     <a href="{% url 'register' %}" class="inline-block bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition duration-300 ml-2">Register</a>
