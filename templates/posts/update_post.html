@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Post - {{ post.title }}</title> {# 'post.title' from your FBV context #}
+ <title>Edit Post - {{ post.title }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Select2 CSS CDN -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -13,10 +13,10 @@
         .errorlist li { font-size: 0.875rem; }
         /* Expanded from @apply */
         input[type="text"], textarea, select {
-            width: 100%;
-            padding: 0.75rem; /* p-3 */
-            border-width: 1px;
-            border-color: #d1d5db; /* border-gray-300 */
+ width: 100%;
+ padding: 0.75rem; /* p-3 */
+ border: 1px solid rgb(209 213 219); /* border border-gray-300 */
+ /* border-color: #d1d5db; /* border-gray-300 */
             border-radius: 0.375rem; /* rounded-md */
             outline: none; /* focus:outline-none */
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm for basic inputs */
@@ -24,8 +24,11 @@
         input[type="text"]:focus,
         textarea:focus,
         select:focus {
-            ring-width: 2px; /* focus:ring-2 */
-            ring-color: #3b82f6; /* focus:ring-blue-500 */
+ --tw-ring-color: rgb(59 130 246); /* focus:ring-blue-500 */
+ --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+ box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+ border-color: rgb(59 130 246); /* focus:border-blue-500 */
+ /* ring-width: 2px; /* focus:ring-2 */
         }
         /* For the active pagination button */
         .pagination-active {
@@ -37,16 +40,18 @@
         .select2-container .select2-selection--multiple {
             display: block;
             width: 100%;
-            padding: 0.75rem;
-            border-width: 1px;
-            border-color: #d1d5db;
-            border-radius: 0.375rem;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            outline: none;
-            min-height: 44px; /* Adjust height to match other inputs */
-            line-height: 1.5; /* Adjust line height for better spacing */
+ padding: 0.5rem 0.75rem !important; /* px-3 py-2 */
+ border: 1px solid rgb(209 213 219) !important; /* border border-gray-300 */
+ border-radius: 0.375rem !important; /* rounded-md */
+ box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; /* shadow-sm */
+ outline: none !important; /* focus:outline-none */
+ min-height: 44px;
+ line-height: 1.5;
         }
         .select2-container .select2-selection--multiple:focus-within {
+ --tw-ring-color: rgb(59 130 246) !important; /* focus:ring-blue-500 */
+ --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color) !important;
+ box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000) !important;
             box-shadow: 0 0 0 2px #3b82f6; /* focus:ring-2, focus:ring-blue-500 equivalent */
         }
         .select2-container--default .select2-selection--multiple .select2-selection__choice {
@@ -63,7 +68,7 @@
             line-height: 1.5rem; /* Adjust for better vertical alignment */
         }
         .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
-            color: #3b82f6; /* text-blue-500 */
+ color: #1e40af; /* text-blue-800 */
             margin-left: 0.25rem; /* Add some space */
             cursor: pointer;
         }
@@ -93,14 +98,14 @@
              box-shadow: none !important;
         }
         .select2-dropdown {
-            border-radius: 0.375rem; /* rounded-md */
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
-            border-width: 1px;
-            border-color: #d1d5db; /* border-gray-300 */
+ border-radius: 0.375rem; /* rounded-md */
+ box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+ border: 1px solid rgb(209 213 219); /* border border-gray-300 */
+ /* border-width: 1px; */
         }
         .select2-results__option--highlighted.select2-results__option--selectable {
-            background-color: #3b82f6; /* bg-blue-500 */
-            color: #ffffff; /* text-white */
+ @apply bg-blue-500 text-white !important;
+ /* background-color: #3b82f6; /* bg-blue-500 */
         }
         .select2-results__option {
             padding: 0.5rem !important; /* p-2 */
@@ -110,7 +115,7 @@
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
         <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Edit Blog Post</h1>
-
+ 
         {% if messages %}
             <ul class="mb-4">
                 {% for message in messages %}
@@ -120,7 +125,7 @@
                 {% endfor %}
             </ul>
         {% endif %}
-
+ 
         <form method="post" class="space-y-4">
             {% csrf_token %}
             
@@ -129,7 +134,7 @@
                     {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
                 </ul>
             {% endif %}
-
+ 
             {# Title field #}
             <div class="mb-4">
                 <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
@@ -144,7 +149,7 @@
                     </ul>
                 {% endif %}
             </div>
-
+ 
             {# Content field #}
             <div class="mb-4">
                 <label for="{{ form.content.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
@@ -159,7 +164,7 @@
                     </ul>
                 {% endif %}
             </div>
-
+ 
             {# Categories Field #}
             <div class="mb-4">
                 <label for="{{ form.categories.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
@@ -174,7 +179,7 @@
                     </ul>
                 {% endif %}
             </div>
-
+ 
             <button type="submit" class="w-full bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition duration-300 shadow-md font-semibold text-lg">
                 Update Post
             </button>
@@ -186,7 +191,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <!-- Select2 JavaScript CDN -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
+ 
     <script>
         $(document).ready(function() {
             // Initialize Select2 on your categories dropdown

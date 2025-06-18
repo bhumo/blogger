@@ -21,6 +21,8 @@ Blogger is a web application built with Django that allows users to register, cr
     *   Dynamic category system.
     *   Categories are displayed and can be used for filtering.
 *   **Comments:**
+    *   Users can add comments to blog posts.
+    *   Comments are displayed below the blog post content.
     *   Model for comments on blog posts (frontend/views for creating/displaying comments not yet fully implemented).
 *   **Styling:**
     *   Frontend styled using Tailwind CSS.
@@ -70,6 +72,7 @@ blogger/
     ```
 
 2.  **Create and activate a virtual environment:**
+    Python 3.13.2 is used
     ```bash
     python -m venv venv
     source venv/bin/activate  # On Windows: venv\Scripts\activate

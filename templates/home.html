@@ -379,6 +379,13 @@ By <span class\="font\-medium"\></span>${data.author}</span> on ${new Date(data.
                                 <div class="bg-gray-100 p-3 rounded-lg border border-gray-200">                                    
                                     <p class="text-sm font-semibold text-gray-800 mb-1">${data.comment.author} <span class="text-gray-500 font-normal">on ${new Date(data.comment.created_at).toLocaleDateString()}</span></p>
 <p class\="text\-gray\-700"\></span>${data.comment.content}</p>
+                                    {% if data.comment.categories %}
+                                        <p class="text-sm text-gray-500 mt-1">Categories: 
+                                            {% for category in data.comment.categories %}
+                                                <span class="inline-block bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">{{ category }}</span>
+                                            {% endfor %}
+                                        </p>
+                                    {% endif %}
                                 </div>
                             `;
                             // Prepend new comment to the list
