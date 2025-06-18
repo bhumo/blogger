@@ -1,21 +1,22 @@
 # blog/views.py
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View 
 from django.contrib.auth import login
 from django.contrib.auth.forms import AuthenticationForm 
 
 from .forms import CustomUserCreationForm , BlogPostForm
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import CreateView
+from django.contrib.auth.mixins import LoginRequiredMixin,  UserPassesTestMixin
+from django.views.generic import CreateView, UpdateView
 from .models import BlogPost, Category 
 
 from django.core.paginator import Paginator 
 from django.db.models import Q 
 from django.contrib import messages 
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.http import HttpResponseForbidden
 
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 
 # Registration View handles the resgistration process of my new users
@@ -80,25 +81,63 @@ class CreatePostView(LoginRequiredMixin, CreateView):
 
     # This method is called when the form submitted via POST is valid
     def form_valid(self, form):
-        # 1. Assign the author to the post instance before saving
+        
         form.instance.author = self.request.user
         # Make sure the user is authenticated before allowing to create a new post at the backend
         if not self.request.user or not self.request.user.is_authenticated:
                 return HttpResponseForbidden("You must be logged in to create a post.")
-
-        # 2. Call the parent's form_valid method to save the BlogPost instance
-        # This will also handle the ManyToMany relationship for categories selected via checkboxes
+        
+        # Calling parent form valid method to save the form and to create post
         response = super().form_valid(form)
 
-       
-        # 3. Add a final success message for the post creation
         messages.success(self.request, "Your blog post has been published!")
 
-        # 5. Return the HTTP response (redirect to success_url)
+        # (redirect to success_url)
         return response
 
     # This method is called when the form submitted via POST is NOT valid
     def form_invalid(self, form):
         messages.error(self.request, "Please correct the errors below.")
-        return super().form_invalid(form) # Render the template with form errors
+        return super().form_invalid(form) # Render template with form errors
 
+@login_required # User must be logged in
+
+def update_blog_post(request, pk):
+    # Get the post, or return 404.
+    # The user_passes_test decorator already ensures it's the author's post.
+    post = get_object_or_404(BlogPost, pk=pk) 
+    if post.author != request.user:
+         return HttpResponseForbidden("You are not allowed to edit this post.")
+  
+    if request.method == 'POST':
+        form = BlogPostForm(request.POST, instance=post)
+        if form.is_valid():
+            form.save()
+
+            messages.success(request, "Your blog post has been updated!")
+            return redirect('home')
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        # For GET request to pre-populate the form with existing posts
+        form = BlogPostForm(instance=post)
+    
+    context = {
+        'form': form,
+        'post': post,
+        'all_categories': Category.objects.all().order_by('name'), # For rendering manual dropdown if needed
+    }
+    return render(request, 'posts/update_post.html', context)
+
+
+#  Delete Post View
+@login_required # User must be logged in
+def delete_blog_post(request, pk):
+    # Get the post. user_passes_test ensures it's the author's post.
+    post = get_object_or_404(BlogPost, pk=pk)
+    if post.author != request.user:
+         return HttpResponseForbidden("You are not allowed to edit this post.")
+    
+    post.delete() # Delete the post from database
+    messages.success(request, "Your blog post has been deleted!")
+    return  redirect('home') 

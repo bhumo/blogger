@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Post - {{ post.title }}</title> {# 'post.title' from your FBV context #}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Select2 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .errorlist { color: #ef4444; list-style-type: none; padding: 0; margin-bottom: 10px; }
+        .errorlist li { font-size: 0.875rem; }
+        /* Expanded from @apply */
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 0.75rem; /* p-3 */
+            border-width: 1px;
+            border-color: #d1d5db; /* border-gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            outline: none; /* focus:outline-none */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm for basic inputs */
+        }
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            ring-width: 2px; /* focus:ring-2 */
+            ring-color: #3b82f6; /* focus:ring-blue-500 */
+        }
+        /* For the active pagination button */
+        .pagination-active {
+            background-color: #2563eb; /* bg-blue-600 */
+            color: #ffffff; /* text-white */
+        }
+
+        /* Select2 styling overrides - Expanded from @apply */
+        .select2-container .select2-selection--multiple {
+            display: block;
+            width: 100%;
+            padding: 0.75rem;
+            border-width: 1px;
+            border-color: #d1d5db;
+            border-radius: 0.375rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            outline: none;
+            min-height: 44px; /* Adjust height to match other inputs */
+            line-height: 1.5; /* Adjust line height for better spacing */
+        }
+        .select2-container .select2-selection--multiple:focus-within {
+            box-shadow: 0 0 0 2px #3b82f6; /* focus:ring-2, focus:ring-blue-500 equivalent */
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #dbeafe; /* bg-blue-100 */
+            color: #1e40af; /* text-blue-800 */
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 600; /* font-semibold */
+            padding-left: 0.625rem; /* px-2.5 */
+            padding-right: 0.625rem;
+            padding-top: 0.125rem; /* py-0.5 */
+            padding-bottom: 0.125rem;
+            border-radius: 9999px; /* rounded-full */
+            margin-right: 0.25rem; /* mr-1 */
+            line-height: 1.5rem; /* Adjust for better vertical alignment */
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+            color: #3b82f6; /* text-blue-500 */
+            margin-left: 0.25rem; /* Add some space */
+            cursor: pointer;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+            color: #1d4ed8; /* hover:text-blue-700 */
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__clear {
+            color: #6b7280; /* text-gray-500 */
+            cursor: pointer;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__clear:hover {
+            color: #374151; /* hover:text-gray-700 */
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__rendered {
+             display: flex; /* flex */
+             flex-wrap: wrap; /* flex-wrap */
+             gap: 0.25rem; /* gap-1 */
+             align-items: center; /* items-center */
+             padding-top: 0.125rem; /* Add a little padding to align with Select2 */
+             padding-bottom: 0.125rem;
+        }
+        .select2-container--default .select2-search--inline .select2-search__field {
+             padding: 0 !important;
+             margin: 0 !important;
+             outline: none !important;
+             border: none !important;
+             box-shadow: none !important;
+        }
+        .select2-dropdown {
+            border-radius: 0.375rem; /* rounded-md */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+            border-width: 1px;
+            border-color: #d1d5db; /* border-gray-300 */
+        }
+        .select2-results__option--highlighted.select2-results__option--selectable {
+            background-color: #3b82f6; /* bg-blue-500 */
+            color: #ffffff; /* text-white */
+        }
+        .select2-results__option {
+            padding: 0.5rem !important; /* p-2 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Edit Blog Post</h1>
+
+        {% if messages %}
+            <ul class="mb-4">
+                {% for message in messages %}
+                    <li {% if message.tags %} class="{{ message.tags }} p-3 rounded-md text-sm {% if 'success' in message.tags %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}"{% endif %}>
+                        {{ message }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <ul class="errorlist">
+                    {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                </ul>
+            {% endif %}
+
+            {# Title field #}
+            <div class="mb-4">
+                <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form.title.label }}
+                    {% if form.title.field.required %}<span class="text-red-500">*</span>{% endif %}
+                </label>
+                {{ form.title }}
+                {% if form.title.help_text %}<p class="text-sm text-gray-500 mt-1">{{ form.title.help_text }}</p>{% endif %}
+                {% if form.title.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.title.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            {# Content field #}
+            <div class="mb-4">
+                <label for="{{ form.content.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form.content.label }}
+                    {% if form.content.field.required %}<span class="text-red-500">*</span>{% endif %}
+                </label>
+                {{ form.content }}
+                {% if form.content.help_text %}<p class="text-sm text-gray-500 mt-1">{{ form.content.help_text }}</p>{% endif %}
+                {% if form.content.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.content.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            {# Categories Field #}
+            <div class="mb-4">
+                <label for="{{ form.categories.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form.categories.label }}
+                    {% if form.categories.field.required %}<span class="text-red-500">*</span>{% endif %}
+                </label>
+                {{ form.categories }} {# Now renders the <select multiple> with pre-selected options #}
+                {% if form.categories.help_text %}<p class="text-sm text-gray-500 mt-1">{{ form.categories.help_text }}</p>{% endif %}
+                {% if form.categories.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.categories.errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="w-full bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition duration-300 shadow-md font-semibold text-lg">
+                Update Post
+            </button>
+        </form>
+        <p class="mt-6 text-center text-gray-600"><a href="{% url 'home' %}" class="text-blue-600 hover:text-blue-800 font-medium">Back to Home</a>.</p>
+    </div>
+
+    <!-- jQuery is a dependency for Select2 -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Select2 JavaScript CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 on your categories dropdown
+            $('#category-select').select2({
+                placeholder: 'Select existing categories',
+                allowClear: true,
+                tags: false, // DISABLED TAGGING
+                tokenSeparators: [] // REMOVED TOKEN SEPARATORS
+            });
+        });
+    </script>
+</body>
+</html>

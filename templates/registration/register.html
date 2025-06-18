@@ -9,8 +9,15 @@
         body { font-family: 'Inter', sans-serif; }
         .errorlist { color:rgb(93, 19, 19); list-style-type: none; padding: 0; margin-bottom: 10px; }
         .errorlist li { font-size: 0.875rem; }
+        /* Expanded from @apply */
         input[type="text"], input[type="email"], input[type="password"], textarea, input[type="file"] {
-            @apply w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500;
+            width: 100%;
+            padding: 0.75rem; /* p-3 */
+            border-width: 1px;
+            border-color: #d1d5db; /* border-gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            outline: none; /* focus:outline-none */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
         }
     </style>
 </head>
